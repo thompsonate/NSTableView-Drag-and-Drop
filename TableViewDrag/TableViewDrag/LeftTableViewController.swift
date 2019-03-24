@@ -18,7 +18,7 @@ class LeftTableViewController: NSViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.registerForDraggedTypes([.string])
-        tableView.setDraggingSourceOperationMask([.copy, .delete], forLocal: false)
+        tableView.setDraggingSourceOperationMask(.copy, forLocal: false)
     }
     
 }
@@ -66,6 +66,7 @@ extension LeftTableViewController: NSTableViewDelegate {
     {
         guard let source = info.draggingSource as? NSTableView else { return [] }
         if source !== tableView {
+            // Highlight entire table view
             tableView.setDropRow(-1, dropOperation: .on)
             return .copy
         }

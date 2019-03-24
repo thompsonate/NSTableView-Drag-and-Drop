@@ -18,7 +18,7 @@ class RightTableViewController: NSViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.registerForDraggedTypes([.string, .tableViewIndex])
-        tableView.setDraggingSourceOperationMask(.every, forLocal: false)
+        tableView.setDraggingSourceOperationMask([.copy, .delete], forLocal: false)
     }
     
 }
