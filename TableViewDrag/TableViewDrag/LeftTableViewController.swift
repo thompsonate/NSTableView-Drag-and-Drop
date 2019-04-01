@@ -27,10 +27,7 @@ extension LeftTableViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
         return FruitManager.leftFruits.count
     }
-}
-
-
-extension LeftTableViewController: NSTableViewDelegate {
+    
     func tableView(
         _ tableView: NSTableView,
         viewFor tableColumn: NSTableColumn?,
@@ -41,9 +38,10 @@ extension LeftTableViewController: NSTableViewDelegate {
         cell.textField?.stringValue = FruitManager.leftFruits[row]
         return cell
     }
-    
-    
-    
+}
+
+
+extension LeftTableViewController: NSTableViewDelegate {
     func tableView(
         _ tableView: NSTableView,
         pasteboardWriterForRow row: Int) -> NSPasteboardWriting?
