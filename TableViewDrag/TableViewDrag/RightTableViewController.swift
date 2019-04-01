@@ -20,7 +20,6 @@ class RightTableViewController: NSViewController {
         tableView.registerForDraggedTypes([.string, .tableViewIndex])
         tableView.setDraggingSourceOperationMask([.copy, .delete], forLocal: false)
     }
-    
 }
 
 
@@ -28,21 +27,24 @@ extension RightTableViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
         return FruitManager.rightFruits.count
     }
-}
-
-
-extension RightTableViewController: NSTableViewDelegate {
+    
     func tableView(
         _ tableView: NSTableView,
         viewFor tableColumn: NSTableColumn?, row: Int) -> NSView?
     {
-        if let cell = tableView.makeView(withIdentifier: .rightCellView, owner: nil)
-            as? NSTableCellView
-        {
-            cell.textField?.stringValue = FruitManager.rightFruits[row]
-            return cell
-        }
-        return nil
+        let cell = tableView.makeView(withIdentifier: .rightCellView, owner: nil)
+            as! NSTableCellView
+        cell.textField?.stringValue = FruitManager.rightFruits[row]
+        return cell
+    }
+}
+
+
+extension RightTableViewController: NSTableViewDelegate {
+    // Due to a bug with NSTableView, this method has to be implemented to get
+    // the draggingDestinationFeedbackStyle.gap animation to look right.
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        return 17
     }
     
     
@@ -62,10 +64,16 @@ extension RightTableViewController: NSTableViewDelegate {
         proposedRow row: Int,
         proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation
     {
-        if dropOperation == .above {
-            return .move
+        guard let source = info.draggingSource as? NSTableView, dropOperation == .above
+            else { return [] }
+        
+        // If dragging to reorder, use the gap feedback style. Otherwise, draw insertion marker.
+        if source === tableView {
+            tableView.draggingDestinationFeedbackStyle = .gap
+        } else {
+            tableView.draggingDestinationFeedbackStyle = .regular
         }
-        return []
+        return .move
     }
     
     
@@ -78,16 +86,35 @@ extension RightTableViewController: NSTableViewDelegate {
     {
         guard let items = info.draggingPasteboard.pasteboardItems else { return false }
         
-        let indexes = items.compactMap{ $0.integer(forType: .tableViewIndex) }
-        if !indexes.isEmpty {
-            FruitManager.rightFruits.move(with: IndexSet(indexes), to: row)
-            tableView.reloadData()
+        let oldIndexes = items.compactMap{ $0.integer(forType: .tableViewIndex) }
+        if !oldIndexes.isEmpty {
+            FruitManager.rightFruits.move(with: IndexSet(oldIndexes), to: row)
+            
+            // The ol' Stack Overflow copy-paste. Reordering rows can get pretty hairy if
+            // you allow multiple selection. https://stackoverflow.com/a/26855499/7471873
+            
+            tableView.beginUpdates()
+            var oldIndexOffset = 0
+            var newIndexOffset = 0
+            
+            for oldIndex in oldIndexes {
+                if oldIndex < row {
+                    tableView.moveRow(at: oldIndex + oldIndexOffset, to: row - 1)
+                    oldIndexOffset -= 1
+                } else {
+                    tableView.moveRow(at: oldIndex, to: row + newIndexOffset)
+                    newIndexOffset += 1
+                }
+            }
+            tableView.endUpdates()
+            
             return true
         }
         
-        let fruits = items.compactMap{ $0.string(forType: .string) }
-        FruitManager.rightFruits.insert(contentsOf: fruits, at: row)
-        tableView.reloadData()
+        let newFruits = items.compactMap{ $0.string(forType: .string) }
+        FruitManager.rightFruits.insert(contentsOf: newFruits, at: row)
+        tableView.insertRows(at: IndexSet(row...row + newFruits.count - 1),
+                             withAnimation: .slideDown)
         return true
     }
     
@@ -106,7 +133,7 @@ extension RightTableViewController: NSTableViewDelegate {
             for index in indexes.reversed() {
                 FruitManager.rightFruits.remove(at: index)
             }
-            tableView.reloadData()
+            tableView.removeRows(at: IndexSet(indexes), withAnimation: .slideUp)
         }
     }
 }

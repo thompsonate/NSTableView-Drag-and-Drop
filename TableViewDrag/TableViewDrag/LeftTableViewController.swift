@@ -20,7 +20,6 @@ class LeftTableViewController: NSViewController {
         tableView.registerForDraggedTypes([.string])
         tableView.setDraggingSourceOperationMask(.copy, forLocal: false)
     }
-    
 }
 
 
@@ -37,13 +36,10 @@ extension LeftTableViewController: NSTableViewDelegate {
         viewFor tableColumn: NSTableColumn?,
         row: Int) -> NSView?
     {
-        if let cell = tableView.makeView(withIdentifier: .leftCellView, owner: self)
-            as? NSTableCellView
-        {
-            cell.textField?.stringValue = FruitManager.leftFruits[row]
-            return cell
-        }
-        return nil
+        let cell = tableView.makeView(withIdentifier: .leftCellView, owner: self)
+            as! NSTableCellView
+        cell.textField?.stringValue = FruitManager.leftFruits[row]
+        return cell
     }
     
     
@@ -64,6 +60,9 @@ extension LeftTableViewController: NSTableViewDelegate {
         proposedDropOperation dropOperation: NSTableView.DropOperation)
         -> NSDragOperation
     {
+        // info.draggingSource is nil when the source is in a different application.
+        // This disallows drags from other apps, sources within the same app that
+        // aren’t NSTableViews, and drags from the left table view.
         guard let source = info.draggingSource as? NSTableView else { return [] }
         if source !== tableView {
             // Highlight entire table view
@@ -83,9 +82,12 @@ extension LeftTableViewController: NSTableViewDelegate {
     {
         guard let items = info.draggingPasteboard.pasteboardItems else { return false }
         
-        let fruits = items.compactMap{ $0.string(forType: .string) }
-        FruitManager.leftFruits.append(contentsOf: fruits)
-        tableView.reloadData()
+        let newFruits = items.compactMap{ $0.string(forType: .string) }
+        FruitManager.leftFruits.append(contentsOf: newFruits)
+        
+        let oldCount = tableView.numberOfRows
+        tableView.insertRows(at: IndexSet(oldCount...oldCount + newFruits.count - 1),
+                             withAnimation: .slideDown)
         return true
     }
 }
