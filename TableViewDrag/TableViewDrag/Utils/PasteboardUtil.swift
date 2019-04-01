@@ -8,7 +8,7 @@
 
 import Cocoa
 
-class FruitPasteboardWriter: NSObject, NSPasteboardWriting {
+class FruitPasteboardWriter: NSObject {
     var fruit: String
     var index: Int
     
@@ -17,28 +17,11 @@ class FruitPasteboardWriter: NSObject, NSPasteboardWriting {
         self.index = index
     }
     
-    func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
-        return [.string, .tableViewIndex]
-    }
-
-    func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
-        switch type {
-        case .string:
-            return fruit
-        case .tableViewIndex:
-            return index
-        default:
-            return nil
-        }
-    }
+    
+    
+    
+    
 }
-
-
-
-extension NSPasteboard.PasteboardType {
-    static let tableViewIndex = NSPasteboard.PasteboardType("io.natethompson.tableViewIndex")
-}
-
 
 
 extension NSPasteboardItem {

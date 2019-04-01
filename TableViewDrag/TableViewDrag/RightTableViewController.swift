@@ -17,8 +17,8 @@ class RightTableViewController: NSViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.registerForDraggedTypes([.string, .tableViewIndex])
-        tableView.setDraggingSourceOperationMask([.copy, .delete], forLocal: false)
+        
+        
     }
 }
 
@@ -49,93 +49,8 @@ extension RightTableViewController: NSTableViewDelegate {
     
     
     
-    func tableView(
-        _ tableView: NSTableView,
-        pasteboardWriterForRow row: Int) -> NSPasteboardWriting?
-    {
-        return FruitPasteboardWriter(fruit: FruitManager.rightFruits[row], at: row)
-    }
     
     
-    
-    func tableView(
-        _ tableView: NSTableView,
-        validateDrop info: NSDraggingInfo,
-        proposedRow row: Int,
-        proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation
-    {
-        guard let source = info.draggingSource as? NSTableView, dropOperation == .above
-            else { return [] }
-        
-        // If dragging to reorder, use the gap feedback style. Otherwise, draw insertion marker.
-        if source === tableView {
-            tableView.draggingDestinationFeedbackStyle = .gap
-        } else {
-            tableView.draggingDestinationFeedbackStyle = .regular
-        }
-        return .move
-    }
-    
-    
-    
-    func tableView(
-        _ tableView: NSTableView,
-        acceptDrop info: NSDraggingInfo,
-        row: Int,
-        dropOperation: NSTableView.DropOperation) -> Bool
-    {
-        guard let items = info.draggingPasteboard.pasteboardItems else { return false }
-        
-        let oldIndexes = items.compactMap{ $0.integer(forType: .tableViewIndex) }
-        if !oldIndexes.isEmpty {
-            FruitManager.rightFruits.move(with: IndexSet(oldIndexes), to: row)
-            
-            // The ol' Stack Overflow copy-paste. Reordering rows can get pretty hairy if
-            // you allow multiple selection. https://stackoverflow.com/a/26855499/7471873
-            
-            tableView.beginUpdates()
-            var oldIndexOffset = 0
-            var newIndexOffset = 0
-            
-            for oldIndex in oldIndexes {
-                if oldIndex < row {
-                    tableView.moveRow(at: oldIndex + oldIndexOffset, to: row - 1)
-                    oldIndexOffset -= 1
-                } else {
-                    tableView.moveRow(at: oldIndex, to: row + newIndexOffset)
-                    newIndexOffset += 1
-                }
-            }
-            tableView.endUpdates()
-            
-            return true
-        }
-        
-        let newFruits = items.compactMap{ $0.string(forType: .string) }
-        FruitManager.rightFruits.insert(contentsOf: newFruits, at: row)
-        tableView.insertRows(at: IndexSet(row...row + newFruits.count - 1),
-                             withAnimation: .slideDown)
-        return true
-    }
-    
-    
-    
-    func tableView(
-        _ tableView: NSTableView,
-        draggingSession session: NSDraggingSession,
-        endedAt screenPoint: NSPoint,
-        operation: NSDragOperation)
-    {
-        // Handle items dragged to Trash
-        if operation == .delete, let items = session.draggingPasteboard.pasteboardItems {
-            let indexes = items.compactMap{ $0.integer(forType: .tableViewIndex) }
-            
-            for index in indexes.reversed() {
-                FruitManager.rightFruits.remove(at: index)
-            }
-            tableView.removeRows(at: IndexSet(indexes), withAnimation: .slideUp)
-        }
-    }
 }
 
 
