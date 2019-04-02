@@ -64,11 +64,10 @@ extension RightTableViewController: NSTableViewDelegate {
         proposedRow row: Int,
         proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation
     {
-        guard let source = info.draggingSource as? NSTableView, dropOperation == .above
-            else { return [] }
+        guard dropOperation == .above else { return [] }
         
         // If dragging to reorder, use the gap feedback style. Otherwise, draw insertion marker.
-        if source === tableView {
+        if let source = info.draggingSource as? NSTableView, source === tableView {
             tableView.draggingDestinationFeedbackStyle = .gap
         } else {
             tableView.draggingDestinationFeedbackStyle = .regular

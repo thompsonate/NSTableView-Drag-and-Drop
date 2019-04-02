@@ -61,8 +61,7 @@ extension LeftTableViewController: NSTableViewDelegate {
         // info.draggingSource is nil when the source is in a different application.
         // This disallows drags from other apps, sources within the same app that
         // aren’t NSTableViews, and drags from the left table view.
-        guard let source = info.draggingSource as? NSTableView else { return [] }
-        if source !== tableView {
+        if let source = info.draggingSource as? NSTableView, source !== tableView {
             // Highlight entire table view
             tableView.setDropRow(-1, dropOperation: .on)
             return .copy
